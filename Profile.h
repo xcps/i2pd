@@ -78,7 +78,39 @@ namespace i2p
             //virtual void addData(std::string scope, std::string stat, long value, long duration);
         };
 
-        class Rate;
+        class Rate
+        {
+          public:
+            Rate ();
+            ~Rate ();
+          private:
+            // Currents
+            long m_CurrentTotalValue;
+            int m_CurrentEventCount;
+            long m_CurrentTotalEventTime;
+
+            // Lasts
+            long m_LastTotalValue;
+            int m_LastEventCount;
+            long m_LastTotalEventTime;
+
+            // Extremes
+            long m_ExtremeTotalValue;
+            int m_ExtremeEventCount;
+            long m_ExtremeTotalEventTime;
+
+            // Lifetime values
+            long m_LifetimeTotalValue;
+            long m_LifetimeEventCount;
+            long m_LifetimeTotalEventTime;
+
+            // Rate stats
+            RateStat *m_Stat;
+
+            long m_LastCoalesceDate;
+            long m_CreationDate;
+            int m_Period;
+        };
 
         class RateStat
         {
@@ -92,40 +124,6 @@ namespace i2p
 
             std::vector<Rate> m_Rates;
             StatLog m_StatLog;
-        };
-
-        class Rate
-        {
-          public:
-            Rate ();
-            ~Rate ();
-          private:
-            // Currents
-            double m_CurrentTotalValue;
-            int m_CurrentEventCount;
-            long m_CurrentTotalEventTime;
-
-            // Lasts
-            double m_LastTotalValue;
-            int m_LastEventCount;
-            long m_LastTotalEventTime;
-
-            // Extremes
-            double m_ExtremeTotalValue;
-            int m_ExtremeEventCount;
-            long m_ExtremeTotalEventTime;
-
-            // Lifetime values
-            double m_LifetimeTotalValue;
-            long m_LifetimeEventCount;
-            long m_LifetimeTotalEventTime;
-
-            // Rate stats
-            RateStat m_Stat;
-
-            long m_LastCoalesceDate;
-            long m_CreationDate;
-            int m_Period;
         };
 
         class TunnelHistory
@@ -147,7 +145,7 @@ namespace i2p
 
             RateStat m_RejectRate;
             RateStat m_FailRate;
-            static std::string m_StatGroup;
+            std::string m_StatGroup;
         };
 
         class DBHistory
@@ -176,7 +174,7 @@ namespace i2p
             long m_LastStoreFailed;
             long m_UnpromptedDbStoreNew;
             long m_UnpromptedDbStoreOld;
-            static std::string m_StatGroup;
+            std::string m_StatGroup;
         };
 
         class RouterProfile
@@ -205,13 +203,13 @@ namespace i2p
             long m_IntegrationBonus;
 
             // Speed stats
-            double m_SpeedValue;
-            double m_CapacityValue;
-            double m_IntegrationValue;
+            long m_SpeedValue;
+            long m_CapacityValue;
+            long m_IntegrationValue;
             bool m_IsFailing;
             // new calculation values, to be updated
-            double m_SpeedValueNew;
-            double m_CapacityValueNew;
+            long m_SpeedValueNew;
+            long m_CapacityValueNew;
             // are we in coalescing state?
             bool m_Coalescing;
             // good vs bad behavior
@@ -221,8 +219,8 @@ namespace i2p
             bool m_Expanded;
             bool m_ExpandedDB;
             //private int _consecutiveBanlists;
-            static int m_Distance;
-            const i2p::data::IdentHash& m_Peer;
+            int m_Distance;
+            const i2p::data::IdentHash m_Peer;
 
           public:
             int getXORDistance () { return m_Distance; }
@@ -314,26 +312,26 @@ namespace i2p
              * (or measured) max rates, allowing this speed to reflect the speed /available/.
              *
              */
-            double getSpeedValue() { return m_SpeedValue; }
+            long getSpeedValue() { return m_SpeedValue; }
             /**
              * How many tunnels do we think this peer can handle over the next hour? 
              *
              */
-            double getCapacityValue() { return m_CapacityValue; }
+            long getCapacityValue() { return m_CapacityValue; }
             /**
              * How well integrated into the network is this peer (as measured by how much they've
              * told us that we didn't already know).  Higher numbers means better integrated
              *
              */
-            double getIntegrationValue() { return m_IntegrationValue; }
+            long getIntegrationValue() { return m_IntegrationValue; }
             /**
              * is this peer actively failing (aka not worth touching)?
              * deprecated - unused - always false
              */
             bool getIsFailing() { return m_IsFailing; }
 
-            double getTunnelTestTimeAverage() { return m_TunnelTestResponseTimeAvg; }
-            void setTunnelTestTimeAverage(double avg) { m_TunnelTestResponseTimeAvg = avg; }
+            long getTunnelTestTimeAverage() { return m_TunnelTestResponseTimeAvg; }
+            void setTunnelTestTimeAverage(long avg) { m_TunnelTestResponseTimeAvg = avg * 0.01; }
         };
 
         class Profiler
