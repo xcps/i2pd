@@ -3,7 +3,7 @@ COMMON_SRC = \
   LeaseSet.cpp Log.cpp NTCPSession.cpp NetDb.cpp Reseed.cpp RouterContext.cpp \
   RouterInfo.cpp SSU.cpp SSUSession.cpp SSUData.cpp Streaming.cpp Identity.cpp \
   TransitTunnel.cpp Transports.cpp Tunnel.cpp TunnelEndpoint.cpp TunnelPool.cpp \
-  TunnelGateway.cpp Destination.cpp util.cpp aes.cpp base64.cpp
+  TunnelGateway.cpp Destination.cpp util.cpp aes.cpp base64.cpp Profile.cpp Statistics.cpp
 
 
 ifeq ($(UNAME),Darwin)
