@@ -331,7 +331,7 @@ namespace i2p
             bool getIsFailing() { return m_IsFailing; }
 
             long getTunnelTestTimeAverage() { return m_TunnelTestResponseTimeAvg; }
-            void setTunnelTestTimeAverage(long avg) { m_TunnelTestResponseTimeAvg = avg * 0.01; }
+            void setTunnelTestTimeAverage(long avg) { m_TunnelTestResponseTimeAvg = avg; }
         };
 
         class Profiler
