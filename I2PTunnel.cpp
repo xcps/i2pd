@@ -234,6 +234,58 @@ namespace client
 		}	
 	}
 
+	I2PTunnelConnectionIRC::I2PTunnelConnectionIRC (I2PService * owner, std::shared_ptr<i2p::stream::Stream> stream,
+		std::shared_ptr<boost::asio::ip::tcp::socket> socket, 
+		const boost::asio::ip::tcp::endpoint& target, const std::string& host):
+		I2PTunnelConnection (owner, stream, socket, target), m_Host (host), m_HeaderSent (false), m_From (stream->GetRemoteIdentity ())
+	{
+	}
+
+	void I2PTunnelConnectionIRC::Write (const uint8_t * buf, size_t len)
+	{
+		if (m_HeaderSent)
+			I2PTunnelConnection::Write (buf, len);
+		else
+		{	
+			m_InHeader.clear ();
+			m_InHeader.write ((const char *)buf, len);
+			std::string line;
+			bool endOfHeader = false;
+			while (!endOfHeader)
+			{
+				std::getline(m_InHeader, line);
+				if (!m_InHeader.fail ())
+				{
+					if (line == "\r") endOfHeader = true;
+					else
+					{	
+						if (line.find ("Host:") != std::string::npos)
+							m_OutHeader << "Host: " << m_Host << "\r\n";
+						else
+							m_OutHeader << line << "\n";
+					}	
+				}
+				else
+					break;
+			}
+			// add X-I2P fields
+			if (m_From)
+			{
+				m_OutHeader << X_I2P_DEST_B32 << ": " << context.GetAddressBook ().ToAddress(m_From->GetIdentHash ()) << "\r\n";
+				m_OutHeader << X_I2P_DEST_HASH << ": " << m_From->GetIdentHash ().ToBase64 () << "\r\n";
+				m_OutHeader << X_I2P_DEST_B64 << ": " << m_From->ToBase64 () << "\r\n";
+			}
+
+			if (endOfHeader)
+			{
+				m_OutHeader << "\r\n"; // end of header
+				m_OutHeader << m_InHeader.str ().substr (m_InHeader.tellg ()); // data right after header
+				m_HeaderSent = true;
+				I2PTunnelConnection::Write ((uint8_t *)m_OutHeader.str ().c_str (), m_OutHeader.str ().length ());
+			}
+		}	
+	}
+
 	/* This handler tries to stablish a connection with the desired server and dies if it fails to do so */
 	class I2PClientTunnelHandler: public I2PServiceHandler, public std::enable_shared_from_this<I2PClientTunnelHandler>
 	{
@@ -430,6 +482,19 @@ namespace client
 	void I2PServerTunnelHTTP::CreateI2PConnection (std::shared_ptr<i2p::stream::Stream> stream)
 	{
 		auto conn = std::make_shared<I2PTunnelConnectionHTTP> (this, stream, std::make_shared<boost::asio::ip::tcp::socket> (GetService ()), GetEndpoint (), GetAddress ());
+		AddHandler (conn);
+		conn->Connect ();
+	}
+
+	I2PServerTunnelIRC::I2PServerTunnelIRC (const std::string& name, const std::string& address, 
+	    int port, std::shared_ptr<ClientDestination> localDestination, int inport):
+		I2PServerTunnel (name, address, port, localDestination, inport)
+	{
+	}
+
+	void I2PServerTunnelIRC::CreateI2PConnection (std::shared_ptr<i2p::stream::Stream> stream)
+	{
+		auto conn = std::make_shared<I2PTunnelConnectionIRC> (this, stream, std::make_shared<boost::asio::ip::tcp::socket> (GetService ()), GetEndpoint (), GetAddress ());
 		AddHandler (conn);
 		conn->Connect ();
 	}
