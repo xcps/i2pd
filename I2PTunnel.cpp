@@ -273,7 +273,7 @@ namespace client
 							auto nextpos = line.find(' ', pos + 1);
 							LogPrint (eLogError, "nextpos: ", nextpos, "\n");
 							LogPrint (eLogError, "host to be replaced: ", context.GetAddressBook ().ToAddress(m_From->GetIdentHash ()), "\n");
-							m_OutHeader << line.substr(0, pos) << context.GetAddressBook ().ToAddress(m_From->GetIdentHash ()) << line.substr(nextpos);
+							m_OutHeader << line.substr(0, pos + 1) << context.GetAddressBook ().ToAddress(m_From->GetIdentHash ()) << line.substr(nextpos);
 							LogPrint (eLogError, "======================== ", pos, "+++++++++++++  ==============================\n");
 							// m_OutHeader << "Host: " << m_Host << "\r\n";
 						} else
