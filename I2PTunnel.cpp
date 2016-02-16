@@ -243,6 +243,9 @@ namespace client
 
 	void I2PTunnelConnectionIRC::Write (const uint8_t * buf, size_t len)
 	{
+		LogPrint (eLogError, "========================\n", buf, "\n==============================\n");
+
+
 		if (m_HeaderSent)
 			I2PTunnelConnection::Write (buf, len);
 		else
@@ -259,15 +262,28 @@ namespace client
 					if (line == "\r") endOfHeader = true;
 					else
 					{	
-						if (line.find ("Host:") != std::string::npos)
-							m_OutHeader << "Host: " << m_Host << "\r\n";
-						else
+						if (line.find ("USER") != std::string::npos)
+						{
+							auto pos = line.find(' ');
+							LogPrint (eLogError, "pos: ", pos, "\n");
+							pos = line.find(' ', pos + 1);
+							LogPrint (eLogError, "pos: ", pos, "\n");
+							pos = line.find(' ', pos + 1);
+							LogPrint (eLogError, "pos: ", pos, "\n");
+							auto nextpos = line.find(' ', pos + 1);
+							LogPrint (eLogError, "nextpos: ", nextpos, "\n");
+							LogPrint (eLogError, "host to be replaced: ", context.GetAddressBook ().ToAddress(m_From->GetIdentHash ()), "\n");
+							m_OutHeader << line.substr(0, pos) << context.GetAddressBook ().ToAddress(m_From->GetIdentHash ()) << line.substr(nextpos);
+							LogPrint (eLogError, "======================== ", pos, "+++++++++++++  ==============================\n");
+							// m_OutHeader << "Host: " << m_Host << "\r\n";
+						} else
 							m_OutHeader << line << "\n";
 					}	
 				}
 				else
 					break;
 			}
+			std::cout << "\n======================== \n" << m_OutHeader.str ().c_str () << "\n======================== \n+++++++++++++\n";
 			// add X-I2P fields
 			if (m_From)
 			{
