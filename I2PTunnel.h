@@ -93,10 +93,8 @@ namespace client
 			void Write (const uint8_t * buf, size_t len);
 
 		private:
-		
+			
 			std::string m_Host;
-			std::stringstream m_InHeader, m_OutHeader;
-			bool m_HeaderSent;
 			std::shared_ptr<const i2p::data::IdentityEx> m_From;
 	};
 

@@ -237,69 +237,37 @@ namespace client
 	I2PTunnelConnectionIRC::I2PTunnelConnectionIRC (I2PService * owner, std::shared_ptr<i2p::stream::Stream> stream,
 		std::shared_ptr<boost::asio::ip::tcp::socket> socket, 
 		const boost::asio::ip::tcp::endpoint& target, const std::string& host):
-		I2PTunnelConnection (owner, stream, socket, target), m_Host (host), m_HeaderSent (false), m_From (stream->GetRemoteIdentity ())
+		I2PTunnelConnection (owner, stream, socket, target), m_Host (host), m_From (stream->GetRemoteIdentity ())
 	{
 	}
 
 	void I2PTunnelConnectionIRC::Write (const uint8_t * buf, size_t len)
 	{
-		LogPrint (eLogError, "========================\n", buf, "\n==============================\n");
+		char *c = (char*)((int)buf + (int)len + 1);
+		*c = '\0';
+
+		auto *packet = (char*)buf;
+		auto pos = (char *)strstr ((const char*)buf, "\nUSER");
+		std::stringstream m_OutPacket;
+		if (pos != NULL)
+		{
+			pos++;
+			pos = (char*)memchr (pos, ' ', (int)buf + (int)len - (int)pos);
+			pos++;
+			pos = (char*)memchr (pos, ' ', (int)buf + (int)len - (int)pos);
+			pos++;
+			auto nextpos = (char*)memchr (pos, ' ', (int)buf + len - (int)pos);
+			*pos = '\0';
 
 
-		if (m_HeaderSent)
-			I2PTunnelConnection::Write (buf, len);
-		else
-		{	
-			m_InHeader.clear ();
-			m_InHeader.write ((const char *)buf, len);
-			std::string line;
-			bool endOfHeader = false;
-			while (!endOfHeader)
-			{
-				std::getline(m_InHeader, line);
-				if (!m_InHeader.fail ())
-				{
-					if (line == "\r") endOfHeader = true;
-					else
-					{	
-						if (line.find ("USER") != std::string::npos)
-						{
-							auto pos = line.find(' ');
-							LogPrint (eLogError, "pos: ", pos, "\n");
-							pos = line.find(' ', pos + 1);
-							LogPrint (eLogError, "pos: ", pos, "\n");
-							pos = line.find(' ', pos + 1);
-							LogPrint (eLogError, "pos: ", pos, "\n");
-							auto nextpos = line.find(' ', pos + 1);
-							LogPrint (eLogError, "nextpos: ", nextpos, "\n");
-							LogPrint (eLogError, "host to be replaced: ", context.GetAddressBook ().ToAddress(m_From->GetIdentHash ()), "\n");
-							m_OutHeader << line.substr(0, pos + 1) << context.GetAddressBook ().ToAddress(m_From->GetIdentHash ()) << line.substr(nextpos);
-							LogPrint (eLogError, "======================== ", pos, "+++++++++++++  ==============================\n");
-							// m_OutHeader << "Host: " << m_Host << "\r\n";
-						} else
-							m_OutHeader << line << "\n";
-					}	
-				}
-				else
-					break;
-			}
-			std::cout << "\n======================== \n" << m_OutHeader.str ().c_str () << "\n======================== \n+++++++++++++\n";
-			// add X-I2P fields
-			if (m_From)
-			{
-				m_OutHeader << X_I2P_DEST_B32 << ": " << context.GetAddressBook ().ToAddress(m_From->GetIdentHash ()) << "\r\n";
-				m_OutHeader << X_I2P_DEST_HASH << ": " << m_From->GetIdentHash ().ToBase64 () << "\r\n";
-				m_OutHeader << X_I2P_DEST_B64 << ": " << m_From->ToBase64 () << "\r\n";
-			}
+			m_OutPacket.str ("");
+			m_OutPacket << buf << context.GetAddressBook ().ToAddress(m_From->GetIdentHash ()) << nextpos;
+			std::cout << m_OutPacket.str ();
 
-			if (endOfHeader)
-			{
-				m_OutHeader << "\r\n"; // end of header
-				m_OutHeader << m_InHeader.str ().substr (m_InHeader.tellg ()); // data right after header
-				m_HeaderSent = true;
-				I2PTunnelConnection::Write ((uint8_t *)m_OutHeader.str ().c_str (), m_OutHeader.str ().length ());
-			}
-		}	
+			packet = (char *)m_OutPacket.str ().c_str ();
+			len = m_OutPacket.str ().length();
+		}
+		I2PTunnelConnection::Write ((uint8_t *)packet, len);
 	}
 
 	/* This handler tries to stablish a connection with the desired server and dies if it fails to do so */
