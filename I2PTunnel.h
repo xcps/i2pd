@@ -96,6 +96,7 @@ namespace client
 			
 			std::string m_Host;
 			std::shared_ptr<const i2p::data::IdentityEx> m_From;
+			std::stringstream m_OutPacket;
 	};
 
 	class I2PClientTunnel: public TCPIPAcceptor

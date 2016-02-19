@@ -243,31 +243,33 @@ namespace client
 
 	void I2PTunnelConnectionIRC::Write (const uint8_t * buf, size_t len)
 	{
-		char *c = (char*)((int)buf + (int)len + 1);
-		*c = '\0';
+		std::stringstream m_InPacket;
+		std::string line;
 
-		auto *packet = (char*)buf;
-		auto pos = (char *)strstr ((const char*)buf, "\nUSER");
-		std::stringstream m_OutPacket;
-		if (pos != NULL)
+		m_OutPacket.str ("");
+		m_InPacket.write ((const char *)buf, len);
+		std::getline (m_InPacket, line);
+		while (!m_InPacket.fail())
 		{
-			pos++;
-			pos = (char*)memchr (pos, ' ', (int)buf + (int)len - (int)pos);
-			pos++;
-			pos = (char*)memchr (pos, ' ', (int)buf + (int)len - (int)pos);
-			pos++;
-			auto nextpos = (char*)memchr (pos, ' ', (int)buf + len - (int)pos);
-			*pos = '\0';
-
-
-			m_OutPacket.str ("");
-			m_OutPacket << buf << context.GetAddressBook ().ToAddress(m_From->GetIdentHash ()) << nextpos;
-			std::cout << m_OutPacket.str ();
-
-			packet = (char *)m_OutPacket.str ().c_str ();
-			len = m_OutPacket.str ().length();
+			
+			if (line.find ("USER", 0, 4))
+			{
+				auto pos = line.find(" ");
+				pos++;
+				pos = line.find(" ", pos);
+				pos++;
+				pos = line.find(" ", pos);
+				pos++;
+				auto nextpos = line.find(" ", pos);
+				m_OutPacket << line.substr (0, pos) << context.GetAddressBook ().ToAddress(m_From->GetIdentHash ()) << line.substr(nextpos);
+			} else {
+				m_OutPacket << line;
+			}
 		}
-		I2PTunnelConnection::Write ((uint8_t *)packet, len);
+		std::cout << "==========\nbuf\n" << buf << "=================\n\n";
+		std::cout << "==========\nInPacket\n" << m_InPacket.str () << "=================\n\n";
+		std::cout << "==========\nOutPacket\n" << m_OutPacket.str () << "=================\n\n";
+		I2PTunnelConnection::Write ((uint8_t *)m_OutPacket.str ().c_str (), len);
 	}
 
 	/* This handler tries to stablish a connection with the desired server and dies if it fails to do so */
