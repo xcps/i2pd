@@ -245,14 +245,12 @@ namespace client
 	{
 		std::stringstream m_InPacket;
 		std::string line;
-
 		m_OutPacket.str ("");
 		m_InPacket.write ((const char *)buf, len);
-		std::getline (m_InPacket, line);
+		std::getline(m_InPacket, line);
 		while (!m_InPacket.fail())
 		{
-			
-			if (line.find ("USER", 0, 4))
+			if (line.find ("USER") != std::string::npos)
 			{
 				auto pos = line.find(" ");
 				pos++;
@@ -261,14 +259,14 @@ namespace client
 				pos = line.find(" ", pos);
 				pos++;
 				auto nextpos = line.find(" ", pos);
-				m_OutPacket << line.substr (0, pos) << context.GetAddressBook ().ToAddress(m_From->GetIdentHash ()) << line.substr(nextpos);
+				m_OutPacket << line.substr (0, pos);
+				m_OutPacket << context.GetAddressBook ().ToAddress (m_From->GetIdentHash ());
+				m_OutPacket << line.substr(nextpos) << '\n';
 			} else {
-				m_OutPacket << line;
+				m_OutPacket << line << '\n';
 			}
+			std::getline (m_InPacket, line);
 		}
-		std::cout << "==========\nbuf\n" << buf << "=================\n\n";
-		std::cout << "==========\nInPacket\n" << m_InPacket.str () << "=================\n\n";
-		std::cout << "==========\nOutPacket\n" << m_OutPacket.str () << "=================\n\n";
 		I2PTunnelConnection::Write ((uint8_t *)m_OutPacket.str ().c_str (), len);
 	}
 
