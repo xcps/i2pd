@@ -250,13 +250,14 @@ namespace client
 		m_InPacket.str ("");
 
 		m_InPacket.write ((const char *)buf, len);
-		std::getline(m_InPacket, line);
+		
 
-		while (!m_InPacket.fail())
+		while (std::getline(m_InPacket, line))
 		{
-			if (line.find ("USER") != std::string::npos)
+			auto pos = line.find ("USER");
+			if (pos != std::string::npos && pos == 0)
 			{
-				auto pos = line.find(" ");
+				pos = line.find(" ");
 				pos++;
 				pos = line.find(" ", pos);
 				pos++;
@@ -272,8 +273,6 @@ namespace client
 			} else {
 				m_OutPacket << line << '\n';
 			}
-
-			std::getline (m_InPacket, line);
 		}
 		LogPrint (eLogError, "\n====== IRC ============\n", m_OutPacket.str ().substr(0, m_OutPacket.str ().length ()), "===========\n");
 		I2PTunnelConnection::Write ((uint8_t *)m_OutPacket.str ().c_str (), m_OutPacket.str ().length ());
