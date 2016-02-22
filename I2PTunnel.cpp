@@ -243,18 +243,13 @@ namespace client
 
 	void I2PTunnelConnectionIRC::Write (const uint8_t * buf, size_t len)
 	{
-		std::stringstream m_InPacket;
 		std::string line;
-		
 		m_OutPacket.str ("");
-		m_InPacket.str ("");
-
 		m_InPacket.write ((const char *)buf, len);
 		
 		while (!m_InPacket.eof () && !m_InPacket.fail ())
 		{
 			std::getline (m_InPacket, line);
-
 			auto pos = line.find ("USER");
 			if (pos != std::string::npos && pos == 0)
 			{
@@ -264,9 +259,7 @@ namespace client
 				pos++;
 				pos = line.find (" ", pos);
 				pos++;
-				
 				auto nextpos = line.find (" ", pos);
-				
 
 				m_OutPacket << line.substr (0, pos);
 				m_OutPacket << context.GetAddressBook ().ToAddress (m_From->GetIdentHash ());
@@ -275,7 +268,6 @@ namespace client
 				m_OutPacket << line << '\n';
 			}
 		}
-		LogPrint (eLogError, "\n====== IRC ============\n", m_OutPacket.str ().substr(0, m_OutPacket.str ().length ()), "===========\n");
 		I2PTunnelConnection::Write ((uint8_t *)m_OutPacket.str ().c_str (), m_OutPacket.str ().length ());
 	}
 
