@@ -245,9 +245,13 @@ namespace client
 	{
 		std::stringstream m_InPacket;
 		std::string line;
+		
 		m_OutPacket.str ("");
+		m_InPacket.str ("");
+
 		m_InPacket.write ((const char *)buf, len);
 		std::getline(m_InPacket, line);
+
 		while (!m_InPacket.fail())
 		{
 			if (line.find ("USER") != std::string::npos)
@@ -258,16 +262,21 @@ namespace client
 				pos++;
 				pos = line.find(" ", pos);
 				pos++;
+				
 				auto nextpos = line.find(" ", pos);
+				
+
 				m_OutPacket << line.substr (0, pos);
 				m_OutPacket << context.GetAddressBook ().ToAddress (m_From->GetIdentHash ());
 				m_OutPacket << line.substr(nextpos) << '\n';
 			} else {
 				m_OutPacket << line << '\n';
 			}
+
 			std::getline (m_InPacket, line);
 		}
-		I2PTunnelConnection::Write ((uint8_t *)m_OutPacket.str ().c_str (), len);
+		LogPrint (eLogError, "\n====== IRC ============\n", m_OutPacket.str ().substr(0, m_OutPacket.str ().length ()), "===========\n");
+		I2PTunnelConnection::Write ((uint8_t *)m_OutPacket.str ().c_str (), m_OutPacket.str ().length ());
 	}
 
 	/* This handler tries to stablish a connection with the desired server and dies if it fails to do so */
