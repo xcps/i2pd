@@ -251,25 +251,26 @@ namespace client
 
 		m_InPacket.write ((const char *)buf, len);
 		
-
-		while (std::getline(m_InPacket, line))
+		while (!m_InPacket.eof () && !m_InPacket.fail ())
 		{
+			std::getline (m_InPacket, line);
+
 			auto pos = line.find ("USER");
 			if (pos != std::string::npos && pos == 0)
 			{
-				pos = line.find(" ");
+				pos = line.find (" ");
 				pos++;
-				pos = line.find(" ", pos);
+				pos = line.find (" ", pos);
 				pos++;
-				pos = line.find(" ", pos);
+				pos = line.find (" ", pos);
 				pos++;
 				
-				auto nextpos = line.find(" ", pos);
+				auto nextpos = line.find (" ", pos);
 				
 
 				m_OutPacket << line.substr (0, pos);
 				m_OutPacket << context.GetAddressBook ().ToAddress (m_From->GetIdentHash ());
-				m_OutPacket << line.substr(nextpos) << '\n';
+				m_OutPacket << line.substr (nextpos) << '\n';
 			} else {
 				m_OutPacket << line << '\n';
 			}
