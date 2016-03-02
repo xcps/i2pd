@@ -84,6 +84,8 @@ namespace client
 		}
 		else
 		{	
+			char*c = (char*)m_Buffer + bytes_transferred; *c = '\0';
+			LogPrint (eLogError, "======== OUT ========\n", m_Buffer);
 			if (m_Stream)
 			{	
 				auto s = shared_from_this ();
@@ -243,18 +245,28 @@ namespace client
 
     void I2PTunnelConnectionIRC::Write (const uint8_t * buf, size_t len)
     {
+
+    	if (!m_isWebIrced) {
+        	m_isWebIrced = true;
+        	m_OutPacket.str ("");
+            m_OutPacket << "WEBIRC 12322 cgiirc " << context.GetAddressBook ().ToAddress (m_From->GetIdentHash ()) << " 127.0.0.1\n";
+            I2PTunnelConnection::Write ((uint8_t *)m_OutPacket.str ().c_str (), m_OutPacket.str ().length ());
+        }
+    	char*c = (char*)buf + len; *c = '\0';
+		LogPrint (eLogError, "======== IN ========\n", buf);
     	std::string line;
         m_OutPacket.str ("");
         m_InPacket.clear ();
         m_InPacket.write ((const char *)buf, len);
-        
+        LogPrint (eLogError, "======== IN PACKET ========\n", m_InPacket.str ().c_str ());
         while (!m_InPacket.eof () && !m_InPacket.fail ())
         {
             std::getline (m_InPacket, line);
             if (line.length () == 0 && m_InPacket.eof ()) {
             	m_InPacket.str ("");
             }
-            auto pos = line.find ("USER");
+
+            auto pos = line.find ("USER ");
             if (pos != std::string::npos && pos == 0)
             {
                 pos = line.find (" ");
@@ -269,6 +281,7 @@ namespace client
                 m_OutPacket << line << '\n';
             }
         }
+        LogPrint (eLogError, "======== OUT PACKET ========\n", m_OutPacket.str ().c_str ());
         I2PTunnelConnection::Write ((uint8_t *)m_OutPacket.str ().c_str (), m_OutPacket.str ().length ());
     }
 
