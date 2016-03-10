@@ -36,6 +36,7 @@ namespace proxy
 			void Terminate();
 			void AsyncSockRead();
 			void HTTPRequestFailed(/*std::string message*/);
+			void RedirectToJumpService();
 			void ExtractRequest();
 			bool ValidateHTTPRequest();
 			void HandleJumpServices();
@@ -163,11 +164,26 @@ namespace proxy
 		m_path.erase(addressHelperPos);
 	}
 
+	void HTTPProxyHandler::RedirectToJumpService(/*HTTPProxyHandler::errTypes error*/)
+	{
+		static std::string response = "HTTP/1.1 302 Found\r\nLocation: http://stats.i2p/cgi-bin/jump.cgi?a=http://" + m_address + "\r\n\r\n";
+		boost::asio::async_write(*m_sock, boost::asio::buffer(response,response.size()),
+					 std::bind(&HTTPProxyHandler::SentHTTPFailed, shared_from_this(), std::placeholders::_1));
+	}
+
+
 	bool HTTPProxyHandler::CreateHTTPRequest(uint8_t *http_buff, std::size_t len) 
 	{
 		ExtractRequest(); //TODO: parse earlier
 		if (!ValidateHTTPRequest()) return false;
 		HandleJumpServices();
+
+		i2p::data::IdentHash identHash;
+		if (!i2p::client::context.GetAddressBook ().GetIdentHash (m_address, identHash)){
+			RedirectToJumpService();
+			return false;
+		}
+
 		m_request = m_method;
 		m_request.push_back(' ');
 		m_request += m_path;
