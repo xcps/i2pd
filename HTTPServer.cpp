@@ -193,12 +193,14 @@ namespace util
 	const char HTTP_COMMAND_TUNNELS[] = "tunnels";
 	const char HTTP_COMMAND_TRANSIT_TUNNELS[] = "transit_tunnels";
 	const char HTTP_COMMAND_TRANSPORTS[] = "transports";	
+	const char HTTP_COMMAND_JUMPSERVICES[] = "jumpservices=";	
 	const char HTTP_COMMAND_START_ACCEPTING_TUNNELS[] = "start_accepting_tunnels";	
 	const char HTTP_COMMAND_STOP_ACCEPTING_TUNNELS[] = "stop_accepting_tunnels";	
 	const char HTTP_COMMAND_RUN_PEER_TEST[] = "run_peer_test";	
 	const char HTTP_COMMAND_LOCAL_DESTINATIONS[] = "local_destinations";
 	const char HTTP_COMMAND_LOCAL_DESTINATION[] = "local_destination";
 	const char HTTP_PARAM_BASE32_ADDRESS[] = "b32";
+	const char HTTP_PARAM_ADDRESS[] = "address";
 	const char HTTP_COMMAND_SAM_SESSIONS[] = "sam_sessions";
 	const char HTTP_COMMAND_SAM_SESSION[] = "sam_session";
 	const char HTTP_PARAM_SAM_SESSION_ID[] = "id";
@@ -393,6 +395,7 @@ namespace util
 		else	
 			s << "<a href=/?" << HTTP_COMMAND_START_ACCEPTING_TUNNELS << ">Start accepting tunnels</a><br>\r\n<br>\r\n";
 		s << "<a href=/?" << HTTP_COMMAND_RUN_PEER_TEST << ">Run peer test</a><br>\r\n<br>\r\n";
+		s << "<a href=/?" << HTTP_COMMAND_JUMPSERVICES << "&address=example.i2p>Jump services</a><br>\r\n<br>\r\n";
 		s << "</div><div class=right>";
 		if (address.length () > 1)
 			HandleCommand (address.substr (2), s);
@@ -462,6 +465,13 @@ namespace util
 		std::string cmd = command.substr (0, paramsPos);
 		if (cmd == HTTP_COMMAND_TRANSPORTS)
 			ShowTransports (s);
+		if (cmd == HTTP_COMMAND_JUMPSERVICES)
+		{
+			std::map<std::string, std::string> params;
+			ExtractParams (command.substr (paramsPos), params);
+			auto address = params[HTTP_PARAM_ADDRESS];
+			ShowJumpServices (address, s);
+		}
 		else if (cmd == HTTP_COMMAND_TUNNELS)
 			ShowTunnels (s);
 		else if (cmd == HTTP_COMMAND_TRANSIT_TUNNELS)
@@ -683,6 +693,16 @@ namespace util
 				s << "<br>\r\n" << std::endl;
 			}
 		}
+	}
+
+	void HTTPConnection::ShowJumpServices (const std::string& address, std::stringstream& s)
+	{
+		s << "<form type=\"get\" action=\"/\">";
+		s << "<input type=\"hidden\" name=\"jumpservices\">";
+		s << "<input type=\"text\" value=\"" << address << "\" name=\"address\"> </form><br>\r\n";
+		s << "<b>Jump services for " << address << "</b>";
+		s << "<ul><li><a href=\"http://inr.i2p/search/?q=" << address << "\">Slow jump service</a> <br>\r\n";
+		s << "<li><a href=\"http://stats.i2p/cgi-bin/jump.cgi?a=" << address << "\">zzz jump service</a></ul>";
 	}
 	
 	void HTTPConnection::ShowSAMSessions (std::stringstream& s)

@@ -12,6 +12,7 @@
 #include "ClientContext.h"
 #include "I2PEndian.h"
 #include "I2PTunnel.h"
+#include "Config.h"
 
 namespace i2p
 {
@@ -166,8 +167,13 @@ namespace proxy
 
 	void HTTPProxyHandler::RedirectToJumpService(/*HTTPProxyHandler::errTypes error*/)
 	{
-		static std::string response = "HTTP/1.1 302 Found\r\nLocation: http://stats.i2p/cgi-bin/jump.cgi?a=http://" + m_address + "\r\n\r\n";
-		boost::asio::async_write(*m_sock, boost::asio::buffer(response,response.size()),
+		std::stringstream response;
+		std::string httpAddr; i2p::config::GetOption("http.address", httpAddr);
+		uint16_t    httpPort; i2p::config::GetOption("http.port", httpPort);
+		// LogPrint(eLogError, "================\nhost:",  httpAddr, ":",  httpPort);
+
+		response << "HTTP/1.1 302 Found\r\nLocation: http://" << httpAddr << ":" << httpPort << "/?jumpservices=&address=" << m_address << "\r\n\r\n";
+		boost::asio::async_write(*m_sock, boost::asio::buffer(response.str (),response.str ().length ()),
 					 std::bind(&HTTPProxyHandler::SentHTTPFailed, shared_from_this(), std::placeholders::_1));
 	}
 
